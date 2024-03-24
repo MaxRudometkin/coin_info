@@ -161,3 +161,9 @@ cython_debug/
 
 **/.idea/workspace.xml
 **/.idea/tasks.xml
+
+.DS_Store
+.idea/
+
+
+config.py

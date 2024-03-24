@@ -1,57 +1,116 @@
 var socket = io();
 
-$("#datepicker").datepicker({
-    autoclose: true,
-    todayHighlight: true,
-}).datepicker('update', new Date());
 
-socket.on('rate', function(msg) {
-    $('#result').html(msg["msg"]);
-    $('#counter-asset-input').val(msg["answer"]);
+function filterTable(name) {
+   name = name.split('-')[0];
+  // Declare variables
+  var input, filter, table, tr, td, i, txtValue;
+  input = document.getElementById(name+'-input');
+  filter = input.value.toUpperCase();
+  table = document.getElementById(name+'-table');
+  tr = table.getElementsByTagName("tr");
 
-    if (msg["error"] === true) {
-        $('#result-logo').css("color", "red");
-    } else {
-        $('#result-logo').css("color", "green");
+  // Loop through all table rows, and hide those who don't match the search query
+  for (i = 0; i < tr.length; i++) {
+    td = tr[i].getElementsByTagName("td")[0];
+    if (td) {
+      txtValue = td.textContent || td.innerText;
+      if (txtValue.toUpperCase().indexOf(filter) > -1) {
+        tr[i].style.display = "";
+      } else {
+        tr[i].style.display = "none";
+      }
     }
-    $('#result-div').css("display", "flex");
-});
-
-$('#date-helper').html($('#date-input').val());
-$('#base-helper').html($('#normalize').val());
-$('#amount-helper').html($('#base-asset-input').val());
-$('#counter-helper').html($('#normalize2').val());
-
-
-function readData() {
-    var date = $('#date-input').val();
-    var baseCcy = $('#normalize').val();
-    var baseAmt = $('#base-asset-input').val();
-    var counterCcy = $('#normalize2').val();
-    return {
-        "date": date,
-        "baseCcy": baseCcy,
-        "baseAmt": baseAmt,
-        "counterCcy": counterCcy
-    }
+  }
 }
 
 
-function submitBtn() {
-    let data = readData();
-    socket.emit("click", data)
-    $('#result-div').css("display", "none");
+function sortTable(tableName, n) {
+  var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+  table = document.getElementById(tableName);
+  switching = true;
+  // Set the sorting direction to ascending:
+  dir = "asc";
+  /* Make a loop that will continue until
+  no switching has been done: */
+  while (switching) {
+    // Start by saying: no switching is done:
+    switching = false;
+    rows = table.rows;
+    /* Loop through all table rows (except the
+    first, which contains table headers): */
+    for (i = 1; i < (rows.length - 1); i++) {
+      // Start by saying there should be no switching:
+      shouldSwitch = false;
+      /* Get the two elements you want to compare,
+      one from current row and one from the next: */
+      x = rows[i].getElementsByTagName("TD")[n];
+      y = rows[i + 1].getElementsByTagName("TD")[n];
+      /* Check if the two rows should switch place,
+      based on the direction, asc or desc: */
+      if (dir == "asc") {
+        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      } else if (dir == "desc") {
+        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+          // If so, mark as a switch and break the loop:
+          shouldSwitch = true;
+          break;
+        }
+      }
+    }
+    if (shouldSwitch) {
+      /* If a switch has been marked, make the switch
+      and mark that a switch has been done: */
+      rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+      switching = true;
+      // Each time a switch is done, increase this count by 1:
+      switchcount ++;
+    } else {
+      /* If no switching has been done AND the direction is "asc",
+      set the direction to "desc" and run the while loop again. */
+      if (switchcount == 0 && dir == "asc") {
+        dir = "desc";
+        switching = true;
+      }
+    }
+  }
+}
+
+function readFilters(){
+let allDivs = document.getElementById('main-div').children;
+let elems;
+let result = [];
+for (let i=0; i<allDivs.length; i++){
+    elems = allDivs[i].getElementsByClassName('selected');
+    let res = [];
+    for (let j=0;j<elems.length; j++ ){
+        res.push(elems[j].innerText)
+    }
+    result.push(res);
+}
+return result
+
 }
 
 
-function updateHelper(id, value) {
-    if (id === 'normalize') {
-        $('#base-helper').html(value);
-    } else if (id === 'normalize2') {
-        $('#counter-helper').html(value);
-    } else if (id == 'date-input') {
-        $('#date-helper').html(value);
-    } else {
-        $('#amount-helper').html(value);
+function readBlockId(elem){
+    return elem.parentNode.parentNode.parentNode.id.split("-")[0]
+}
+
+
+function deleteDivs(selectedDivId){
+    selectedDivId = selectedDivId+'-block'
+    let allDivs = document.getElementById('main-div').children;
+    for (var i = allDivs.length - 1; i >= 0; i--)
+    {
+        if (allDivs[i].id !=selectedDivId){
+        allDivs[i].remove();
+        }else{
+            return;
+        }
     }
 }
